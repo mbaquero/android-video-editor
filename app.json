@@ -1,25 +1,55 @@
 {
   "expo": {
-    "name": "simple-video-editor-app",
+    "name": "Simple Video Editor",
     "slug": "simple-video-editor-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "scheme": "simplevideoeditor",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0E0F13",
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.mario.simplevideoeditor",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0E0F13",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "plugins": [
+      "expo-router",
+      "expo-video",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to record voiceovers."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to pick videos and photos to edit."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save exported videos.",
+          "granularPermissions": [
+            "video"
+          ]
+        }
+      ],
+      "expo-sharing",
+      "expo-image"
+    ],
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
