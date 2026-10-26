@@ -111,8 +111,8 @@ export function Preview({ project, clipIndex, playheadMs, onPlayheadChange, maxH
               pointerEvents="none"
               style={[
                 styles.textWrap,
-                // Zero-height box centred on the anchor point so the text centres on (x, y).
-                { left: t.x * frameW - frameW * 0.45, width: frameW * 0.9, top: t.y * frameH },
+                // Box twice the frame height centred on the anchor, so the text centres on (x, y).
+                { left: t.x * frameW - frameW * 0.45, width: frameW * 0.9, top: t.y * frameH - frameH, height: frameH * 2 },
               ]}
             >
               <Text
@@ -186,7 +186,7 @@ export function toCssColor(hex: string): string {
 const styles = StyleSheet.create({
   stage: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#000', borderRadius: radius.md, overflow: 'hidden' },
   frame: { backgroundColor: '#000', overflow: 'hidden' },
-  textWrap: { position: 'absolute', height: 0, alignItems: 'center', justifyContent: 'center' },
+  textWrap: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   playBadge: {
     position: 'absolute',
     alignSelf: 'center',
