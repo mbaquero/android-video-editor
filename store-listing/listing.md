@@ -93,10 +93,10 @@ Add each language in Play Console under Grow users → Store presence → Main s
 | --- | --- | --- |
 | App icon | `icon-512.png` | 512×512 PNG |
 | Feature graphic | `feature-graphic.png` | 1024×500 |
-| Phone screenshots | `screenshots/phone-01…08-*.png` | 2–8 images, 1080×1920 |
+| Phone screenshots | `screenshots/<play-locale>/phone-01…08-*.png`, one folder per language | 2–8 images per language, 1080×1920 |
 | Unframed screenshots | `screenshots-raw/*.png` | alternative set, 1080×2112 |
 
-The screenshots show the real editor UI. They were captured from the app's web build with original sample media. The live preview doesn't render filter colours, so the Filters shot shows the controls rather than the graded result.
+The screenshots show the real editor UI in each language, captured from the app's web build with original sample media; Arabic is mirrored right-to-left like the Android app. Upload each folder under that language's listing translation in Play Console (`es-419` works for both Spanish listings). The live preview doesn't render filter colours, so the Filters shot shows the controls rather than the graded result. `screenshot-tools/` regenerates them. The unframed set in `screenshots-raw/` is the older English-only version.
 
 ## Data safety form
 
