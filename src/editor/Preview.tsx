@@ -5,6 +5,7 @@ import { useVideoPlayer, VideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useRef, useState } from 'react';
 import { LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useT } from '@/i18n';
 import { formatTime, outputSize, sourceToOutputMs } from '@/lib/timeline';
 import type { Clip, Project } from '@/state/types';
 import { LabeledSlider } from '@/ui/controls';
@@ -27,6 +28,7 @@ type Props = {
 export function Preview({ project, clipIndex, playheadMs, onPlayheadChange, maxHeight }: Props) {
   const clip: Clip | undefined = project.clips[clipIndex];
   const [boxWidth, setBoxWidth] = useState(0);
+  const { t } = useT();
   const player = useVideoPlayer(null, (p) => {
     p.timeUpdateEventInterval = 0.1;
     p.loop = false;
@@ -144,12 +146,12 @@ export function Preview({ project, clipIndex, playheadMs, onPlayheadChange, maxH
       {clip && (
         <View style={styles.scrubber}>
           <LabeledSlider
-            label={`Clip ${clipIndex + 1} · ${formatTime(playheadMs - clip.startMs)} / ${formatTime(clip.endMs - clip.startMs)}`}
+            label={t('preview.clipPosition', { n: clipIndex + 1, position: formatTime(playheadMs - clip.startMs), length: formatTime(clip.endMs - clip.startMs) })}
             value={Math.min(Math.max(playheadMs, clip.startMs), clip.endMs)}
             min={clip.startMs}
             max={Math.max(clip.endMs, clip.startMs + 1)}
             step={10}
-            format={() => `Timeline ${formatTime(outputMs)}`}
+            format={() => t('preview.timeline', { time: formatTime(outputMs) })}
             onChange={seek}
             onLiveChange={seek}
           />

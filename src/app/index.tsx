@@ -4,25 +4,27 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useT } from '@/i18n';
 import { pickClips } from '@/lib/media';
 import { EMPTY_PROJECT, useProject } from '@/state/ProjectContext';
 import { Button } from '@/ui/controls';
 import { colors, radius, spacing } from '@/ui/theme';
 
-const FEATURES: { icon: React.ComponentProps<typeof Ionicons>['name']; title: string; body: string }[] = [
-  { icon: 'cut-outline', title: 'Trim & split', body: 'Shorten clips, split at the playhead, delete the middle.' },
-  { icon: 'albums-outline', title: 'Merge', body: 'Join videos and photos in any order.' },
-  { icon: 'speedometer-outline', title: 'Speed', body: 'Slow-mo, fast-forward and speed ramps.' },
-  { icon: 'text-outline', title: 'Text & captions', body: 'Animated titles, subtitles and .srt import.' },
-  { icon: 'musical-notes-outline', title: 'Audio', body: 'Music, voiceovers, sound effects, volume and de-noise.' },
-  { icon: 'color-filter-outline', title: 'Filters', body: 'Presets plus brightness, contrast, saturation, warmth.' },
-  { icon: 'swap-horizontal-outline', title: 'Transitions & green screen', body: 'Fades, wipes, zooms and chroma key.' },
-  { icon: 'crop-outline', title: 'Aspect ratio', body: '9:16, 1:1, 4:5 and 16:9 with fit or crop.' },
-];
+const FEATURES = [
+  { icon: 'cut-outline', id: 'trim' },
+  { icon: 'albums-outline', id: 'merge' },
+  { icon: 'speedometer-outline', id: 'speed' },
+  { icon: 'text-outline', id: 'text' },
+  { icon: 'musical-notes-outline', id: 'audio' },
+  { icon: 'color-filter-outline', id: 'filters' },
+  { icon: 'swap-horizontal-outline', id: 'transitions' },
+  { icon: 'crop-outline', id: 'aspect' },
+] as const satisfies readonly { icon: React.ComponentProps<typeof Ionicons>['name']; id: string }[];
 
 export default function Home() {
   const { project, dispatch } = useProject();
   const [loading, setLoading] = useState(false);
+  const { t, tn } = useT();
 
   const startNew = async () => {
     setLoading(true);
@@ -32,7 +34,7 @@ export default function Home() {
       dispatch({ type: 'reset', project: { ...EMPTY_PROJECT, clips } });
       router.push('/editor');
     } catch (e) {
-      Alert.alert('Could not open media', String(e));
+      Alert.alert(t('home.openFailed'), String(e));
     } finally {
       setLoading(false);
     }
@@ -42,17 +44,17 @@ export default function Home() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Simple Video Editor</Text>
-        <Text style={styles.subtitle}>Everyday edits, rendered on your phone.</Text>
+        <Text style={styles.subtitle}>{t('home.subtitle')}</Text>
 
         <View style={styles.actions}>
           {loading ? (
             <ActivityIndicator color={colors.accent} size="large" />
           ) : (
             <>
-              <Button label="New project" icon="add-circle-outline" variant="primary" onPress={startNew} />
+              <Button label={t('home.newProject')} icon="add-circle-outline" variant="primary" onPress={startNew} />
               {project.clips.length > 0 && (
                 <Button
-                  label={`Continue editing (${project.clips.length} clip${project.clips.length > 1 ? 's' : ''})`}
+                  label={tn('home.continue', project.clips.length)}
                   icon="play-forward-outline"
                   onPress={() => router.push('/editor')}
                 />
@@ -63,10 +65,10 @@ export default function Home() {
 
         <View style={styles.grid}>
           {FEATURES.map((f) => (
-            <View key={f.title} style={styles.card}>
+            <View key={f.id} style={styles.card}>
               <Ionicons name={f.icon} size={22} color={colors.accent} />
-              <Text style={styles.cardTitle}>{f.title}</Text>
-              <Text style={styles.cardBody}>{f.body}</Text>
+              <Text style={styles.cardTitle}>{t(`feature.${f.id}.title`)}</Text>
+              <Text style={styles.cardBody}>{t(`feature.${f.id}.body`)}</Text>
             </View>
           ))}
         </View>

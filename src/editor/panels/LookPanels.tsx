@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { Alert, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/i18n';
 import { pickImage } from '@/lib/media';
 import { DEFAULT_FILTER } from '@/state/ProjectContext';
 import type { AspectRatio, FilterSettings, Transition, TransitionType } from '@/state/types';
@@ -9,63 +10,45 @@ import { radius } from '@/ui/theme';
 
 import type { PanelProps } from './types';
 
-const PRESETS = [
-  ['none', 'Original'],
-  ['vivid', 'Vivid'],
-  ['warm', 'Warm'],
-  ['cool', 'Cool'],
-  ['cinematic', 'Cinematic'],
-  ['vintage', 'Vintage'],
-  ['fade', 'Faded'],
-  ['mono', 'B&W'],
-  ['noir', 'Noir'],
-  ['sepia', 'Sepia'],
-  ['invert', 'Invert'],
-].map(([value, label]) => ({ value, label }));
+const PRESETS = ['none', 'vivid', 'warm', 'cool', 'cinematic', 'vintage', 'fade', 'mono', 'noir', 'sepia', 'invert'] as const;
 
 const pct = (v: number) => `${v > 0 ? '+' : ''}${Math.round(v * 100)}`;
 
 export function FilterPanel({ clip, dispatch }: PanelProps) {
+  const { t } = useT();
   const f = clip.filter;
   const set = (patch: Partial<FilterSettings>) => dispatch({ type: 'updateClip', id: clip.id, patch: { filter: { ...f, ...patch } } });
   return (
     <>
-      <Section title="Preset">
-        <ChipRow options={PRESETS} value={f.preset} onChange={(preset) => set({ preset })} />
+      <Section title={t('filter.preset')}>
+        <ChipRow options={PRESETS.map((p) => ({ value: p as string, label: p === 'none' ? t('common.original') : t(`preset.${p}`) }))} value={f.preset} onChange={(preset) => set({ preset })} />
       </Section>
-      <Section title="Adjust">
-        <LabeledSlider label="Brightness" value={f.brightness} min={-0.5} max={0.5} format={pct} onChange={(brightness) => set({ brightness })} />
-        <LabeledSlider label="Contrast" value={f.contrast} min={-0.8} max={0.8} format={pct} onChange={(contrast) => set({ contrast })} />
-        <LabeledSlider label="Saturation" value={f.saturation} min={-1} max={1} format={pct} onChange={(saturation) => set({ saturation })} />
-        <LabeledSlider label="Warmth" value={f.warmth} min={-1} max={1} format={pct} onChange={(warmth) => set({ warmth })} />
-        <LabeledSlider label="Vignette" value={f.vignette} min={0} max={1} format={pct} onChange={(vignette) => set({ vignette })} />
+      <Section title={t('filter.adjust')}>
+        <LabeledSlider label={t('filter.brightness')} value={f.brightness} min={-0.5} max={0.5} format={pct} onChange={(brightness) => set({ brightness })} />
+        <LabeledSlider label={t('filter.contrast')} value={f.contrast} min={-0.8} max={0.8} format={pct} onChange={(contrast) => set({ contrast })} />
+        <LabeledSlider label={t('filter.saturation')} value={f.saturation} min={-1} max={1} format={pct} onChange={(saturation) => set({ saturation })} />
+        <LabeledSlider label={t('filter.warmth')} value={f.warmth} min={-1} max={1} format={pct} onChange={(warmth) => set({ warmth })} />
+        <LabeledSlider label={t('filter.vignette')} value={f.vignette} min={0} max={1} format={pct} onChange={(vignette) => set({ vignette })} />
       </Section>
       <Row>
-        <Button label="Apply to all clips" icon="layers-outline" onPress={() => dispatch({ type: 'updateAllClips', patch: { filter: f } })} />
-        <Button label="Reset" icon="refresh" variant="ghost" onPress={() => set(DEFAULT_FILTER)} />
+        <Button label={t('filter.applyAll')} icon="layers-outline" onPress={() => dispatch({ type: 'updateAllClips', patch: { filter: f } })} />
+        <Button label={t('common.reset')} icon="refresh" variant="ghost" onPress={() => set(DEFAULT_FILTER)} />
       </Row>
-      <Hint>Colour changes are rendered on export — tap Preview to check the look.</Hint>
+      <Hint>{t('filter.hint')}</Hint>
     </>
   );
 }
 
-const TRANSITIONS: { value: TransitionType; label: string }[] = [
-  { value: 'none', label: 'None' },
-  { value: 'fade', label: 'Fade (black)' },
-  { value: 'fadeWhite', label: 'Flash (white)' },
-  { value: 'wipe', label: 'Wipe' },
-  { value: 'slide', label: 'Slide' },
-  { value: 'zoom', label: 'Zoom' },
-  { value: 'circle', label: 'Circle' },
-];
+const TRANSITIONS = ['none', 'fade', 'fadeWhite', 'wipe', 'slide', 'zoom', 'circle'] as const satisfies readonly TransitionType[];
 
-function TransitionEditor({ value, onChange, title }: { value: Transition; onChange: (t: Transition) => void; title: string }) {
+function TransitionEditor({ value, onChange, title }: { value: Transition; onChange: (transition: Transition) => void; title: string }) {
+  const { t } = useT();
   return (
     <Section title={title}>
-      <ChipRow options={TRANSITIONS} value={value.type} onChange={(type) => onChange({ ...value, type })} />
+      <ChipRow options={TRANSITIONS.map((type) => ({ value: type, label: type === 'none' ? t('common.none') : t(`transition.${type}`) }))} value={value.type} onChange={(type) => onChange({ ...value, type })} />
       {value.type !== 'none' && (
         <LabeledSlider
-          label="Duration"
+          label={t('common.duration')}
           value={value.durationMs}
           min={200}
           max={2000}
@@ -79,25 +62,26 @@ function TransitionEditor({ value, onChange, title }: { value: Transition; onCha
 }
 
 export function TransitionPanel({ project, clip, clipIndex, dispatch }: PanelProps) {
+  const { t } = useT();
   const isLast = clipIndex === project.clips.length - 1;
   return (
     <>
       {clipIndex === 0 && (
-        <TransitionEditor title="Intro (start of video)" value={project.intro} onChange={(intro) => dispatch({ type: 'updateProject', patch: { intro } })} />
+        <TransitionEditor title={t('transition.intro')} value={project.intro} onChange={(intro) => dispatch({ type: 'updateProject', patch: { intro } })} />
       )}
       <TransitionEditor
-        title={isLast ? 'Outro (end of video)' : `Between clip ${clipIndex + 1} and ${clipIndex + 2}`}
+        title={isLast ? t('transition.outro') : t('transition.between', { a: clipIndex + 1, b: clipIndex + 2 })}
         value={clip.transitionOut}
         onChange={(transitionOut) => dispatch({ type: 'updateClip', id: clip.id, patch: { transitionOut } })}
       />
       <Button
-        label="Use this transition between all clips"
+        label={t('transition.applyAll')}
         icon="layers-outline"
         onPress={() =>
           project.clips.slice(0, -1).forEach((c) => dispatch({ type: 'updateClip', id: c.id, patch: { transitionOut: clip.transitionOut } }))
         }
       />
-      <Hint>Transitions go through a colour or reveal effect, half on each clip, so the video length doesn&apos;t change.</Hint>
+      <Hint>{t('transition.hint')}</Hint>
     </>
   );
 }
@@ -106,6 +90,7 @@ const KEY_COLORS = ['#00FF00', '#00B140', '#0047BB', '#0000FF'];
 const BG_COLORS = ['#000000', '#FFFFFF', '#FF5C7A', '#4DABF7', '#3DD68C', '#FFD43B'];
 
 export function ChromaPanel({ clip, dispatch }: PanelProps) {
+  const { t } = useT();
   const c = clip.chroma;
   const set = (patch: Partial<typeof c>) => dispatch({ type: 'updateClip', id: clip.id, patch: { chroma: { ...c, ...patch } } });
   const chooseBackground = async () => {
@@ -113,30 +98,30 @@ export function ChromaPanel({ clip, dispatch }: PanelProps) {
       const uri = await pickImage();
       if (uri) set({ backgroundUri: uri });
     } catch (e) {
-      Alert.alert('Could not open image', String(e));
+      Alert.alert(t('chroma.openFailed'), String(e));
     }
   };
   return (
     <>
-      <ToggleRow label="Green screen (chroma key)" hint="Replace a solid green or blue background." value={c.enabled} onChange={(enabled) => set({ enabled })} />
+      <ToggleRow label={t('chroma.toggle')} hint={t('chroma.hint')} value={c.enabled} onChange={(enabled) => set({ enabled })} />
       {c.enabled && (
         <>
-          <Section title="Key colour">
+          <Section title={t('chroma.keyColour')}>
             <Swatches colors={KEY_COLORS} value={c.keyColor} onChange={(keyColor) => set({ keyColor })} />
-            <LabeledSlider label="Strength" value={c.similarity} min={0.02} max={0.4} format={(v) => `${Math.round(v * 250)}`} onChange={(similarity) => set({ similarity })} />
-            <LabeledSlider label="Edge softness" value={c.smoothness} min={0.01} max={0.3} format={(v) => `${Math.round(v * 333)}`} onChange={(smoothness) => set({ smoothness })} />
+            <LabeledSlider label={t('chroma.strength')} value={c.similarity} min={0.02} max={0.4} format={(v) => `${Math.round(v * 250)}`} onChange={(similarity) => set({ similarity })} />
+            <LabeledSlider label={t('chroma.softness')} value={c.smoothness} min={0.01} max={0.3} format={(v) => `${Math.round(v * 333)}`} onChange={(smoothness) => set({ smoothness })} />
           </Section>
-          <Section title="Replace with">
+          <Section title={t('chroma.replace')}>
             {c.backgroundUri ? (
               <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
                 <Image source={{ uri: c.backgroundUri }} style={styles.bgThumb} contentFit="cover" />
-                <Button label="Change" icon="image-outline" onPress={chooseBackground} />
-                <Button label="Use colour" variant="ghost" onPress={() => set({ backgroundUri: undefined })} />
+                <Button label={t('chroma.change')} icon="image-outline" onPress={chooseBackground} />
+                <Button label={t('chroma.useColour')} variant="ghost" onPress={() => set({ backgroundUri: undefined })} />
               </View>
             ) : (
               <>
                 <Swatches colors={BG_COLORS} value={c.backgroundColor} onChange={(backgroundColor) => set({ backgroundColor })} />
-                <Button label="Use a photo as background" icon="image-outline" onPress={chooseBackground} />
+                <Button label={t('chroma.usePhoto')} icon="image-outline" onPress={chooseBackground} />
               </>
             )}
           </Section>
@@ -146,32 +131,27 @@ export function ChromaPanel({ clip, dispatch }: PanelProps) {
   );
 }
 
-const ASPECTS: { value: AspectRatio; label: string }[] = [
-  { value: 'original', label: 'Original' },
-  { value: '9:16', label: '9:16 Stories' },
-  { value: '1:1', label: '1:1 Square' },
-  { value: '4:5', label: '4:5 Portrait' },
-  { value: '16:9', label: '16:9 Wide' },
-];
+const ASPECTS = ['original', '9:16', '1:1', '4:5', '16:9'] as const satisfies readonly AspectRatio[];
 
 export function FormatPanel({ project, dispatch }: PanelProps) {
+  const { t } = useT();
   return (
     <>
-      <Section title="Aspect ratio">
-        <ChipRow options={ASPECTS} value={project.aspect} onChange={(aspect) => dispatch({ type: 'updateProject', patch: { aspect } })} />
+      <Section title={t('format.aspect')}>
+        <ChipRow options={ASPECTS.map((a) => ({ value: a, label: a === 'original' ? t('common.original') : t(`aspect.${a}`) }))} value={project.aspect} onChange={(aspect) => dispatch({ type: 'updateProject', patch: { aspect } })} />
       </Section>
-      <Section title="Framing">
+      <Section title={t('format.framing')}>
         <ChipRow
           options={[
-            { value: 'fit', label: 'Fit (bars)' },
-            { value: 'crop', label: 'Fill (crop)' },
+            { value: 'fit', label: t('format.fit') },
+            { value: 'crop', label: t('format.crop') },
           ]}
           value={project.fit}
           onChange={(fit) => dispatch({ type: 'updateProject', patch: { fit } })}
         />
-        <Hint>Fit shows the whole frame with black bars; Fill crops to cover the frame.</Hint>
+        <Hint>{t('format.hint')}</Hint>
       </Section>
-      <Section title="Resolution">
+      <Section title={t('format.resolution')}>
         <ChipRow
           options={[
             { value: 720, label: '720p' },

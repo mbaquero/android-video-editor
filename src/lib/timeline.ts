@@ -2,10 +2,9 @@ import type { EngineClip, EngineProject, SpeedPoint } from '@modules/video-engin
 
 import type { Clip, Project, RampPreset } from '@/state/types';
 
-export const RAMP_PRESETS: Record<RampPreset, { label: string; points: SpeedPoint[] }> = {
-  none: { label: 'None', points: [] },
+export const RAMP_PRESETS: Record<RampPreset, { points: SpeedPoint[] }> = {
+  none: { points: [] },
   montage: {
-    label: 'Montage',
     points: [
       { at: 0, speed: 1 },
       { at: 0.3, speed: 2.5 },
@@ -15,7 +14,6 @@ export const RAMP_PRESETS: Record<RampPreset, { label: string; points: SpeedPoin
     ],
   },
   hero: {
-    label: 'Hero',
     points: [
       { at: 0, speed: 1 },
       { at: 0.35, speed: 1 },
@@ -25,7 +23,6 @@ export const RAMP_PRESETS: Record<RampPreset, { label: string; points: SpeedPoin
     ],
   },
   bullet: {
-    label: 'Bullet',
     points: [
       { at: 0, speed: 2 },
       { at: 0.4, speed: 2 },
@@ -35,7 +32,6 @@ export const RAMP_PRESETS: Record<RampPreset, { label: string; points: SpeedPoin
     ],
   },
   flashIn: {
-    label: 'Flash in',
     points: [
       { at: 0, speed: 4 },
       { at: 0.3, speed: 1 },
@@ -43,7 +39,6 @@ export const RAMP_PRESETS: Record<RampPreset, { label: string; points: SpeedPoin
     ],
   },
   flashOut: {
-    label: 'Flash out',
     points: [
       { at: 0, speed: 1 },
       { at: 0.7, speed: 1 },

@@ -42,3 +42,6 @@ yarn-error.*
 
 # module build output
 modules/*/android/build/
+
+# Local Play publishing notes
+publish-notes.md

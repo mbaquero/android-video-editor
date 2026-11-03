@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput } from 'react-native';
 
+import { useT } from '@/i18n';
 import { pickTextFile } from '@/lib/media';
 import { parseSubtitles, scriptToCues } from '@/lib/srt';
 import { formatTime, totalDurationMs } from '@/lib/timeline';
@@ -11,30 +12,24 @@ import { colors, radius, spacing, SWATCHES } from '@/ui/theme';
 
 import type { PanelProps } from './types';
 
-const ANIMATIONS: { value: TextItem['animation']; label: string }[] = [
-  { value: 'none', label: 'None' },
-  { value: 'fade', label: 'Fade' },
-  { value: 'slideUp', label: 'Slide up' },
-  { value: 'pop', label: 'Pop' },
-  { value: 'typewriter', label: 'Typewriter' },
-];
+const ANIMATIONS = ['none', 'fade', 'slideUp', 'pop', 'typewriter'] as const satisfies readonly TextItem['animation'][];
 
 const POSITIONS = [
-  { value: 'top', label: 'Top', y: 0.14 },
-  { value: 'center', label: 'Center', y: 0.5 },
-  { value: 'lower', label: 'Lower third', y: 0.72 },
-  { value: 'bottom', label: 'Bottom', y: 0.86 },
+  { value: 'top', y: 0.14 },
+  { value: 'center', y: 0.5 },
+  { value: 'lower', y: 0.72 },
+  { value: 'bottom', y: 0.86 },
 ] as const;
 
 // Engine colours use Android's #AARRGGBB.
 const CAPTION_BOXES = ['transparent', '#99000000', '#E6000000', '#CCFFFFFF', '#E6FF5C7A', '#E6FFD43B'];
 
-function defaults(kind: TextKind, startMs: number, total: number): TextItem {
+function defaults(kind: TextKind, startMs: number, total: number, text: string): TextItem {
   const caption = kind === 'caption';
   return {
     id: newId('text'),
     kind,
-    text: caption ? 'Caption' : 'Your title',
+    text,
     startMs,
     endMs: Math.min(total, startMs + (caption ? 2500 : 3000)),
     x: 0.5,
@@ -48,24 +43,25 @@ function defaults(kind: TextKind, startMs: number, total: number): TextItem {
 }
 
 export function TextPanel({ project, outputPlayheadMs, dispatch, kind }: PanelProps & { kind: TextKind }) {
+  const { t } = useT();
   const total = totalDurationMs(project);
-  const items = project.texts.filter((t) => t.kind === kind).sort((a, b) => a.startMs - b.startMs);
+  const items = project.texts.filter((item) => item.kind === kind).sort((a, b) => a.startMs - b.startMs);
   const [editingId, setEditingId] = useState<string | undefined>(items[0]?.id);
   const [script, setScript] = useState('');
-  const editing = project.texts.find((t) => t.id === editingId);
+  const editing = project.texts.find((item) => item.id === editingId);
 
   const add = () => {
-    const item = defaults(kind, Math.min(outputPlayheadMs, Math.max(0, total - 500)), total);
+    const item = defaults(kind, Math.min(outputPlayheadMs, Math.max(0, total - 500)), total, kind === 'caption' ? t('text.defaultCaption') : t('text.defaultTitle'));
     dispatch({ type: 'addText', text: item });
     setEditingId(item.id);
   };
 
   const addCues = (cues: { startMs: number; endMs: number; text: string }[]) => {
     if (cues.length === 0) {
-      Alert.alert('No captions found', 'The file or script did not contain any caption lines.');
+      Alert.alert(t('text.noCaptionsTitle'), t('text.noCaptionsBody'));
       return;
     }
-    const style = editing ?? defaults('caption', 0, total);
+    const style = editing ?? defaults('caption', 0, total, '');
     for (const cue of cues) {
       dispatch({ type: 'addText', text: { ...style, id: newId('text'), kind: 'caption', ...cue } });
     }
@@ -76,23 +72,23 @@ export function TextPanel({ project, outputPlayheadMs, dispatch, kind }: PanelPr
       const content = await pickTextFile();
       if (content != null) addCues(parseSubtitles(content));
     } catch (e) {
-      Alert.alert('Import failed', String(e));
+      Alert.alert(t('text.importFailed'), String(e));
     }
   };
 
   return (
     <>
-      <Section title={kind === 'caption' ? 'Captions' : 'Titles'} right={<Button label="Add at playhead" icon="add" variant="primary" onPress={add} />}>
+      <Section title={kind === 'caption' ? t('text.captions') : t('text.titles')} right={<Button label={t('text.addAtPlayhead')} icon="add" variant="primary" onPress={add} />}>
         {items.length === 0 && (
-          <Hint>{kind === 'caption' ? 'Add subtitle lines, import an .srt/.vtt file or paste a script below.' : 'Add a title, then style and animate it.'}</Hint>
+          <Hint>{kind === 'caption' ? t('text.captionsEmpty') : t('text.titlesEmpty')}</Hint>
         )}
-        {items.map((t) => (
-          <Pressable key={t.id} onPress={() => setEditingId(t.id)} style={[styles.item, t.id === editingId && styles.itemSelected]}>
+        {items.map((item) => (
+          <Pressable key={item.id} onPress={() => setEditingId(item.id)} style={[styles.item, item.id === editingId && styles.itemSelected]}>
             <Text style={styles.itemText} numberOfLines={1}>
-              {t.text || '(empty)'}
+              {item.text || t('text.empty')}
             </Text>
             <Text style={styles.itemTime}>
-              {formatTime(t.startMs)}–{formatTime(t.endMs)}
+              {formatTime(item.startMs)}–{formatTime(item.endMs)}
             </Text>
           </Pressable>
         ))}
@@ -101,20 +97,20 @@ export function TextPanel({ project, outputPlayheadMs, dispatch, kind }: PanelPr
       {editing && <TextEditor item={editing} total={total} dispatch={dispatch} onDelete={() => setEditingId(undefined)} applyStyleToAll={kind === 'caption' ? items : undefined} />}
 
       {kind === 'caption' && (
-        <Section title="Bulk captions">
+        <Section title={t('text.bulk')}>
           <Row>
-            <Button label="Import .srt / .vtt" icon="document-text-outline" onPress={importFile} />
+            <Button label={t('text.import')} icon="document-text-outline" onPress={importFile} />
           </Row>
           <TextInput
             value={script}
             onChangeText={setScript}
-            placeholder="Paste a script — each sentence becomes a caption, timed across the whole video."
+            placeholder={t('text.scriptPlaceholder')}
             placeholderTextColor={colors.textMuted}
             multiline
             style={[styles.input, { minHeight: 80 }]}
           />
           <Button
-            label="Create captions from script"
+            label={t('text.fromScript')}
             icon="sparkles-outline"
             disabled={!script.trim()}
             onPress={() => {
@@ -141,6 +137,7 @@ function TextEditor({
   onDelete: () => void;
   applyStyleToAll?: TextItem[];
 }) {
+  const { t } = useT();
   const update = (patch: Partial<TextItem>) => dispatch({ type: 'updateText', id: item.id, patch });
   const [draft, setDraft] = useState(item.text);
   const [draftId, setDraftId] = useState(item.id);
@@ -150,7 +147,7 @@ function TextEditor({
   }
 
   return (
-    <Section title="Edit">
+    <Section title={t('text.edit')}>
       <TextInput
         value={draft}
         onChangeText={setDraft}
@@ -158,41 +155,41 @@ function TextEditor({
         onBlur={() => draft !== item.text && update({ text: draft })}
         multiline
         style={styles.input}
-        placeholder="Text"
+        placeholder={t('text.placeholder')}
         placeholderTextColor={colors.textMuted}
       />
-      <LabeledSlider label="Starts" value={item.startMs} min={0} max={Math.max(total, 1)} step={50} format={formatTime} onChange={(v) => update({ startMs: Math.min(v, item.endMs - 100) })} />
-      <LabeledSlider label="Ends" value={item.endMs} min={0} max={Math.max(total, 1)} step={50} format={formatTime} onChange={(v) => update({ endMs: Math.max(v, item.startMs + 100) })} />
+      <LabeledSlider label={t('text.starts')} value={item.startMs} min={0} max={Math.max(total, 1)} step={50} format={formatTime} onChange={(v) => update({ startMs: Math.min(v, item.endMs - 100) })} />
+      <LabeledSlider label={t('text.ends')} value={item.endMs} min={0} max={Math.max(total, 1)} step={50} format={formatTime} onChange={(v) => update({ endMs: Math.max(v, item.startMs + 100) })} />
 
-      <Text style={styles.label}>Position</Text>
+      <Text style={styles.label}>{t('text.position')}</Text>
       <ChipRow
-        options={POSITIONS.map((p) => ({ value: p.value as string, label: p.label }))}
+        options={POSITIONS.map((p) => ({ value: p.value as string, label: t(`pos.${p.value}`) }))}
         value={POSITIONS.find((p) => Math.abs(p.y - item.y) < 0.01 && item.x === 0.5)?.value ?? ''}
         onChange={(v) => update({ x: 0.5, y: POSITIONS.find((p) => p.value === v)!.y })}
       />
-      <LabeledSlider label="Horizontal" value={item.x} min={0.05} max={0.95} format={(v) => `${Math.round(v * 100)}%`} onChange={(x) => update({ x })} />
-      <LabeledSlider label="Vertical" value={item.y} min={0.05} max={0.95} format={(v) => `${Math.round(v * 100)}%`} onChange={(y) => update({ y })} />
-      <LabeledSlider label="Size" value={item.size} min={0.02} max={0.2} step={0.005} format={(v) => `${Math.round(v * 1000) / 10}`} onChange={(size) => update({ size })} />
+      <LabeledSlider label={t('text.horizontal')} value={item.x} min={0.05} max={0.95} format={(v) => `${Math.round(v * 100)}%`} onChange={(x) => update({ x })} />
+      <LabeledSlider label={t('text.vertical')} value={item.y} min={0.05} max={0.95} format={(v) => `${Math.round(v * 100)}%`} onChange={(y) => update({ y })} />
+      <LabeledSlider label={t('text.size')} value={item.size} min={0.02} max={0.2} step={0.005} format={(v) => `${Math.round(v * 1000) / 10}`} onChange={(size) => update({ size })} />
 
-      <Text style={styles.label}>Colour</Text>
+      <Text style={styles.label}>{t('text.colour')}</Text>
       <Swatches colors={SWATCHES} value={item.color} onChange={(color) => update({ color })} />
-      <Text style={styles.label}>Background box</Text>
+      <Text style={styles.label}>{t('text.box')}</Text>
       <Swatches colors={CAPTION_BOXES.slice(1)} allowNone value={item.backgroundColor} onChange={(backgroundColor) => update({ backgroundColor })} />
-      <ToggleRow label="Bold" value={item.bold} onChange={(bold) => update({ bold })} />
+      <ToggleRow label={t('text.bold')} value={item.bold} onChange={(bold) => update({ bold })} />
 
-      <Text style={styles.label}>Animation</Text>
-      <ChipRow options={ANIMATIONS} value={item.animation} onChange={(animation) => update({ animation })} />
+      <Text style={styles.label}>{t('text.animation')}</Text>
+      <ChipRow options={ANIMATIONS.map((a) => ({ value: a, label: a === 'none' ? t('common.none') : t(`anim.${a}`) }))} value={item.animation} onChange={(animation) => update({ animation })} />
 
       <Row style={{ marginTop: spacing.sm }}>
         {applyStyleToAll && applyStyleToAll.length > 1 && (
           <Button
-            label="Apply style to all captions"
+            label={t('text.applyStyle')}
             icon="color-wand-outline"
             onPress={() =>
-              applyStyleToAll.forEach((t) =>
+              applyStyleToAll.forEach((caption) =>
                 dispatch({
                   type: 'updateText',
-                  id: t.id,
+                  id: caption.id,
                   patch: { x: item.x, y: item.y, size: item.size, color: item.color, backgroundColor: item.backgroundColor, bold: item.bold, animation: item.animation },
                 }),
               )
@@ -200,7 +197,7 @@ function TextEditor({
           />
         )}
         <Button
-          label="Delete"
+          label={t('common.delete')}
           icon="trash-outline"
           variant="danger"
           onPress={() => {

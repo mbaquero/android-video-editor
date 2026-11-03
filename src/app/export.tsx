@@ -5,11 +5,12 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { shareAsync } from 'expo-sharing';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, I18nManager, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import VideoEngine, { ExportResult } from '@modules/video-engine';
 
+import { useT } from '@/i18n';
 import { formatTime, outputSize, toEngineProject } from '@/lib/timeline';
 import { useProject } from '@/state/ProjectContext';
 import { Button } from '@/ui/controls';
@@ -22,6 +23,7 @@ export default function ExportScreen() {
   const { preview } = useLocalSearchParams<{ preview?: string }>();
   const isPreview = preview === '1';
   const { project } = useProject();
+  const { t } = useT();
   const [status, setStatus] = useState<Status>('rendering');
   const [error, setError] = useState<string>();
   const [result, setResult] = useState<ExportResult>();
@@ -70,13 +72,13 @@ export default function ExportScreen() {
     try {
       const permission = await requestPermissionsAsync(true);
       if (!permission.granted) {
-        Alert.alert('Permission needed', 'Allow access to your gallery to save the video.');
+        Alert.alert(t('export.permissionTitle'), t('export.permissionBody'));
         return;
       }
       await Asset.create(result.uri);
       setSaved(true);
     } catch (e) {
-      Alert.alert('Could not save', String(e));
+      Alert.alert(t('export.saveFailed'), String(e));
     }
   };
 
@@ -84,7 +86,7 @@ export default function ExportScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
-      <Stack.Screen options={{ title: isPreview ? 'Preview' : 'Export' }} />
+      <Stack.Screen options={{ title: isPreview ? t('nav.preview') : t('nav.export') }} />
       {status === 'rendering' && (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.accent} />
@@ -92,10 +94,10 @@ export default function ExportScreen() {
           <View style={styles.bar}>
             <View style={[styles.barFill, { width: `${Math.round(progress * 100)}%` }]} />
           </View>
-          <Text style={styles.muted}>{isPreview ? 'Rendering a quick 480p preview…' : `Rendering ${width}×${height} MP4…`}</Text>
-          <Text style={styles.muted}>Keep the app open until it finishes.</Text>
+          <Text style={styles.muted}>{isPreview ? t('export.renderingPreview') : t('export.rendering', { width, height })}</Text>
+          <Text style={styles.muted}>{t('export.keepOpen')}</Text>
           <Button
-            label="Cancel"
+            label={t('common.cancel')}
             variant="ghost"
             onPress={() => {
               VideoEngine.cancelExportAsync();
@@ -107,9 +109,9 @@ export default function ExportScreen() {
 
       {status === 'error' && (
         <View style={styles.center}>
-          <Text style={styles.big}>Export failed</Text>
+          <Text style={styles.big}>{t('export.failed')}</Text>
           <Text style={styles.muted}>{error}</Text>
-          <Button label="Try again" icon="refresh" variant="primary" onPress={render} />
+          <Button label={t('export.tryAgain')} icon="refresh" variant="primary" onPress={render} />
         </View>
       )}
 
@@ -122,12 +124,12 @@ export default function ExportScreen() {
             {formatTime(result.durationMs)} · {(result.sizeBytes / 1024 / 1024).toFixed(1)} MB
           </Text>
           {isPreview ? (
-            <Button label="Back to editor" icon="arrow-back" variant="primary" onPress={() => router.back()} />
+            <Button label={t('export.backToEditor')} icon={I18nManager.isRTL ? 'arrow-forward' : 'arrow-back'} variant="primary" onPress={() => router.back()} />
           ) : (
             <View style={styles.actions}>
-              <Button label={saved ? 'Saved to gallery' : 'Save to gallery'} icon={saved ? 'checkmark-circle' : 'download-outline'} variant="primary" disabled={saved} onPress={save} />
-              <Button label="Share" icon="share-social-outline" onPress={() => shareAsync(result.uri, { mimeType: 'video/mp4' })} />
-              <Button label="Keep editing" icon="create-outline" variant="ghost" onPress={() => router.back()} />
+              <Button label={saved ? t('export.saved') : t('export.save')} icon={saved ? 'checkmark-circle' : 'download-outline'} variant="primary" disabled={saved} onPress={save} />
+              <Button label={t('export.share')} icon="share-social-outline" onPress={() => shareAsync(result.uri, { mimeType: 'video/mp4' })} />
+              <Button label={t('export.keepEditing')} icon="create-outline" variant="ghost" onPress={() => router.back()} />
             </View>
           )}
         </View>

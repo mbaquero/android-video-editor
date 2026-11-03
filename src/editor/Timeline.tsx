@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { Fragment } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { useT } from '@/i18n';
 import { clipOutputMs, formatTime, totalDurationMs } from '@/lib/timeline';
 import type { Project } from '@/state/types';
 import { colors, radius, spacing } from '@/ui/theme';
@@ -18,14 +19,15 @@ type Props = {
 };
 
 export function Timeline({ project, selectedId, onSelect, onTransitionPress, onAdd }: Props) {
+  const { t, tn } = useT();
   return (
     <View>
       <View style={styles.meta}>
         <Text style={styles.metaText}>
-          {project.clips.length} clip{project.clips.length === 1 ? '' : 's'} · {formatTime(totalDurationMs(project))}
+          {tn('timeline.clips', project.clips.length, { duration: formatTime(totalDurationMs(project)) })}
         </Text>
         <Text style={styles.metaText}>
-          {project.texts.length} text · {project.audios.length} audio
+          {t('timeline.counts', { texts: project.texts.length, audios: project.audios.length })}
         </Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
@@ -36,7 +38,7 @@ export function Timeline({ project, selectedId, onSelect, onTransitionPress, onA
           return (
             <Fragment key={clip.id}>
               <Pressable
-                accessibilityLabel={`Clip ${i + 1}`}
+                accessibilityLabel={t('timeline.clip', { n: i + 1 })}
                 onPress={() => onSelect(clip.id)}
                 style={[styles.tile, { width }, selected && styles.tileSelected]}
               >
@@ -46,15 +48,15 @@ export function Timeline({ project, selectedId, onSelect, onTransitionPress, onA
                   <Ionicons name={clip.type === 'image' ? 'image-outline' : 'film-outline'} size={20} color={colors.textMuted} />
                 )}
                 <View style={styles.badges}>
-                  {clip.speed !== 1 || clip.ramp !== 'none' ? <Badge text={clip.ramp !== 'none' ? 'ramp' : `${clip.speed}x`} /> : null}
+                  {clip.speed !== 1 || clip.ramp !== 'none' ? <Badge text={clip.ramp !== 'none' ? t('timeline.badgeRamp') : `${clip.speed}x`} /> : null}
                   {clip.filter.preset !== 'none' ? <Badge text="fx" /> : null}
-                  {clip.chroma.enabled ? <Badge text="key" /> : null}
+                  {clip.chroma.enabled ? <Badge text={t('timeline.badgeKey')} /> : null}
                 </View>
                 <Text style={styles.duration}>{(clipOutputMs(clip) / 1000).toFixed(1)}s</Text>
               </Pressable>
               {(i < project.clips.length - 1 || hasTransition) && (
                 <Pressable
-                  accessibilityLabel={`Transition after clip ${i + 1}`}
+                  accessibilityLabel={t('timeline.transitionAfter', { n: i + 1 })}
                   hitSlop={6}
                   onPress={() => onTransitionPress(clip.id)}
                   style={[styles.transition, hasTransition && styles.transitionActive]}
@@ -65,7 +67,7 @@ export function Timeline({ project, selectedId, onSelect, onTransitionPress, onA
             </Fragment>
           );
         })}
-        <Pressable accessibilityLabel="Add clips" onPress={onAdd} style={styles.add}>
+        <Pressable accessibilityLabel={t('timeline.addClips')} onPress={onAdd} style={styles.add}>
           <Ionicons name="add" size={26} color={colors.text} />
         </Pressable>
       </ScrollView>
@@ -125,7 +127,7 @@ const styles = StyleSheet.create({
   add: {
     width: 58,
     height: 58,
-    marginLeft: spacing.sm,
+    marginStart: spacing.sm,
     borderRadius: radius.sm,
     borderWidth: 1,
     borderStyle: 'dashed',

@@ -2,10 +2,12 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { useT } from '@/i18n';
 import { ProjectProvider } from '@/state/ProjectContext';
 import { colors } from '@/ui/theme';
 
 export default function RootLayout() {
+  const { t } = useT();
   return (
     <SafeAreaProvider>
       <ProjectProvider>
@@ -20,8 +22,8 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="editor" options={{ title: 'Editor' }} />
-          <Stack.Screen name="export" options={{ title: 'Export', presentation: 'modal' }} />
+          <Stack.Screen name="editor" options={{ title: t('nav.editor') }} />
+          <Stack.Screen name="export" options={{ title: t('nav.export'), presentation: 'modal' }} />
         </Stack>
       </ProjectProvider>
     </SafeAreaProvider>

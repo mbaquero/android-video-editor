@@ -12,6 +12,7 @@ import { TextPanel } from '@/editor/panels/TextPanel';
 import type { PanelProps } from '@/editor/panels/types';
 import { Preview } from '@/editor/Preview';
 import { Timeline } from '@/editor/Timeline';
+import { useT } from '@/i18n';
 import { pickClips } from '@/lib/media';
 import { sourceToOutputMs } from '@/lib/timeline';
 import { useProject } from '@/state/ProjectContext';
@@ -20,21 +21,22 @@ import { colors, radius, spacing } from '@/ui/theme';
 
 type Tool = 'edit' | 'speed' | 'text' | 'captions' | 'audio' | 'filters' | 'transitions' | 'chroma' | 'format';
 
-const TOOLS: { id: Tool; label: string; icon: ComponentProps<typeof Ionicons>['name'] }[] = [
-  { id: 'edit', label: 'Edit', icon: 'cut-outline' },
-  { id: 'speed', label: 'Speed', icon: 'speedometer-outline' },
-  { id: 'text', label: 'Text', icon: 'text-outline' },
-  { id: 'captions', label: 'Captions', icon: 'chatbox-ellipses-outline' },
-  { id: 'audio', label: 'Audio', icon: 'musical-notes-outline' },
-  { id: 'filters', label: 'Filters', icon: 'color-filter-outline' },
-  { id: 'transitions', label: 'Transitions', icon: 'swap-horizontal-outline' },
-  { id: 'chroma', label: 'Green screen', icon: 'person-outline' },
-  { id: 'format', label: 'Format', icon: 'crop-outline' },
+const TOOLS: { id: Tool; icon: ComponentProps<typeof Ionicons>['name'] }[] = [
+  { id: 'edit', icon: 'cut-outline' },
+  { id: 'speed', icon: 'speedometer-outline' },
+  { id: 'text', icon: 'text-outline' },
+  { id: 'captions', icon: 'chatbox-ellipses-outline' },
+  { id: 'audio', icon: 'musical-notes-outline' },
+  { id: 'filters', icon: 'color-filter-outline' },
+  { id: 'transitions', icon: 'swap-horizontal-outline' },
+  { id: 'chroma', icon: 'person-outline' },
+  { id: 'format', icon: 'crop-outline' },
 ];
 
 export default function Editor() {
   const { project, dispatch, canUndo, canRedo } = useProject();
   const { height } = useWindowDimensions();
+  const { t } = useT();
   const [selectedId, setSelectedId] = useState<string | undefined>(project.clips[0]?.id);
   const [tool, setTool] = useState<Tool>('edit');
   const [playheadMs, setPlayheadMs] = useState(0);
@@ -58,15 +60,15 @@ export default function Editor() {
         setSelectedId(clips[0].id);
       }
     } catch (e) {
-      Alert.alert('Could not add media', String(e));
+      Alert.alert(t('editor.addFailed'), String(e));
     }
   };
 
   if (!clip) {
     return (
       <SafeAreaView style={styles.empty} edges={['bottom']}>
-        <Text style={styles.emptyText}>The timeline is empty.</Text>
-        <Button label="Add videos or photos" icon="add" variant="primary" onPress={addClips} />
+        <Text style={styles.emptyText}>{t('editor.empty')}</Text>
+        <Button label={t('editor.addMedia')} icon="add" variant="primary" onPress={addClips} />
       </SafeAreaView>
     );
   }
@@ -88,11 +90,11 @@ export default function Editor() {
         options={{
           headerRight: () => (
             <View style={styles.headerRight}>
-              <IconButton icon="arrow-undo-outline" label="Undo" disabled={!canUndo} onPress={() => dispatch({ type: 'undo' })} />
-              <IconButton icon="arrow-redo-outline" label="Redo" disabled={!canRedo} onPress={() => dispatch({ type: 'redo' })} />
-              <IconButton icon="eye-outline" label="Render preview" onPress={() => router.push({ pathname: '/export', params: { preview: '1' } })} />
+              <IconButton icon="arrow-undo-outline" label={t('editor.undo')} disabled={!canUndo} onPress={() => dispatch({ type: 'undo' })} />
+              <IconButton icon="arrow-redo-outline" label={t('editor.redo')} disabled={!canRedo} onPress={() => dispatch({ type: 'redo' })} />
+              <IconButton icon="eye-outline" label={t('editor.renderPreview')} onPress={() => router.push({ pathname: '/export', params: { preview: '1' } })} />
               <Pressable style={styles.exportButton} onPress={() => router.push('/export')}>
-                <Text style={styles.exportLabel}>Export</Text>
+                <Text style={styles.exportLabel}>{t('nav.export')}</Text>
               </Pressable>
             </View>
           ),
@@ -113,12 +115,12 @@ export default function Editor() {
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.toolsScroll} contentContainerStyle={styles.tools}>
-        {TOOLS.map((t) => {
-          const active = t.id === tool;
+        {TOOLS.map((item) => {
+          const active = item.id === tool;
           return (
-            <Pressable key={t.id} onPress={() => setTool(t.id)} style={[styles.tool, active && styles.toolActive]} accessibilityRole="tab" accessibilityState={{ selected: active }}>
-              <Ionicons name={t.icon} size={20} color={active ? colors.accent : colors.text} />
-              <Text style={[styles.toolLabel, active && { color: colors.accent }]}>{t.label}</Text>
+            <Pressable key={item.id} onPress={() => setTool(item.id)} style={[styles.tool, active && styles.toolActive]} accessibilityRole="tab" accessibilityState={{ selected: active }}>
+              <Ionicons name={item.icon} size={20} color={active ? colors.accent : colors.text} />
+              <Text style={[styles.toolLabel, active && { color: colors.accent }]}>{t(`tool.${item.id}`)}</Text>
             </Pressable>
           );
         })}
@@ -144,7 +146,7 @@ const styles = StyleSheet.create({
   empty: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
   emptyText: { color: colors.textMuted, fontSize: 16 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  exportButton: { backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 7, marginLeft: 4 },
+  exportButton: { backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 7, marginStart: 4 },
   exportLabel: { color: '#fff', fontWeight: '700' },
   top: { paddingHorizontal: spacing.md, gap: spacing.sm },
   toolsScroll: { flexGrow: 0, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border, marginTop: spacing.sm },

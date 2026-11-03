@@ -56,6 +56,26 @@ Your videos never leave your device. All editing and rendering happens on your p
 
 Save your finished video straight to your gallery or share it to your favourite apps.
 
+Available in English, Chinese, Hindi, Spanish, Arabic, French, Bengali, Portuguese, Russian and Indonesian.
+
+## Translations
+
+Translated listings (name, short and full description) are in `translations/`, one file per Play Console language:
+
+| Language | Play locale | File |
+| --- | --- | --- |
+| Chinese (Simplified) | zh-CN | `translations/zh-CN.md` |
+| Hindi | hi-IN | `translations/hi-IN.md` |
+| Spanish | es-419 and es-ES | `translations/es.md` |
+| Arabic | ar | `translations/ar.md` |
+| French | fr-FR | `translations/fr-FR.md` |
+| Bengali | bn-BD | `translations/bn-BD.md` |
+| Portuguese (Brazil) | pt-BR | `translations/pt-BR.md` |
+| Russian | ru-RU | `translations/ru-RU.md` |
+| Indonesian | id | `translations/id.md` |
+
+Add each language in Play Console under Grow users → Store presence → Main store listing → Manage translations → Add your own translation text. The screenshots stay in English unless you upload localized ones.
+
 ## Contact details
 
 - Developer name: Mario Baquero Ramos

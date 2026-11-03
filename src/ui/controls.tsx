@@ -3,6 +3,8 @@ import Slider from '@react-native-community/slider';
 import { ComponentProps, ReactNode, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View, ViewStyle } from 'react-native';
 
+import { useT } from '@/i18n';
+
 import { colors, radius, spacing } from './theme';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
@@ -38,7 +40,12 @@ export function Button({
       ]}
     >
       {icon && <Ionicons name={icon} size={18} color={fg} />}
-      <Text style={[styles.buttonLabel, { color: fg }]}>{label}</Text>
+      {/*
+        The trailing space is measured but hangs at the line end, giving the label a little
+        slack. Without it, Android sometimes lays text out a pixel narrower than it measured
+        (seen with Arabic) and the last word wraps onto a second line that isn't shown.
+      */}
+      <Text style={[styles.buttonLabel, { color: fg }]}>{`${label} `}</Text>
     </Pressable>
   );
 }
@@ -133,7 +140,7 @@ export function LabeledSlider({
   return (
     <View style={styles.sliderBlock}>
       <View style={styles.sliderHeader}>
-        <Text style={styles.label}>{label}</Text>
+        <Text style={[styles.label, styles.fill]}>{label}</Text>
         <Text style={styles.value}>{format(local)}</Text>
       </View>
       <Slider
@@ -182,13 +189,14 @@ export function Swatches({
   onChange: (c: string) => void;
   allowNone?: boolean;
 }) {
+  const { t } = useT();
   const all = allowNone ? ['transparent', ...options] : options;
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
       {all.map((c) => (
         <Pressable
           key={c}
-          accessibilityLabel={c === 'transparent' ? 'No colour' : `Colour ${c}`}
+          accessibilityLabel={c === 'transparent' ? t('common.noColour') : t('common.colourValue', { value: c })}
           onPress={() => onChange(c)}
           style={[
             styles.swatch,
@@ -266,6 +274,9 @@ export const styles = StyleSheet.create({
   swatchSelected: { borderColor: colors.accent, transform: [{ scale: 1.1 }] },
   section: { gap: spacing.sm, marginBottom: spacing.lg },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { color: colors.textMuted, fontSize: 12, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase' },
+  // flex: 1 sizes the title from the row instead of its own measurement, which Android can
+  // under-report for some scripts (seen with Arabic), hiding the last word.
+  sectionTitle: { flex: 1, color: colors.textMuted, fontSize: 12, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase' },
   row: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
+  fill: { flex: 1 },
 });

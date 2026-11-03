@@ -1,5 +1,7 @@
 export type SubtitleCue = { startMs: number; endMs: number; text: string };
 
+const CJK = /[\u3040-\u30ff\u3400-\u9fff]/;
+
 const TIME = /(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})/;
 
 function toMs(value: string): number | null {
@@ -33,11 +35,15 @@ export function parseSubtitles(input: string): SubtitleCue[] {
 
 /** Splits a script into caption cues spread evenly over a duration (roughly by reading speed). */
 export function scriptToCues(script: string, startMs: number, durationMs: number): SubtitleCue[] {
-  const sentences = (script.match(/[^.!?\n]+[.!?]*/g) ?? [])
+  // Sentence ends in Latin, CJK (。！？), Devanagari/Bengali (।) and Arabic (؟) scripts.
+  const sentences = (script.match(/[^.!?。！？।؟\n]+[.!?。！？।؟]*/g) ?? [])
     .map((s) => s.trim())
     .filter(Boolean);
   if (sentences.length === 0 || durationMs <= 0) return [];
-  const weights = sentences.map((s) => Math.max(1, s.split(/\s+/).length));
+  // Reading time: words for spaced scripts, characters for Chinese/Japanese (no spaces).
+  const weights = sentences.map((s) =>
+    Math.max(1, CJK.test(s) ? Math.ceil(s.length / 2) : s.split(/\s+/).length),
+  );
   const totalWeight = weights.reduce((a, b) => a + b, 0);
   let cursor = startMs;
   return sentences.map((text, i) => {

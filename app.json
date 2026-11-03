@@ -20,7 +20,10 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "blockedPermissions": ["android.permission.CAMERA", "android.permission.SYSTEM_ALERT_WINDOW"]
+      "blockedPermissions": [
+        "android.permission.CAMERA",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -57,7 +60,13 @@
           "backgroundColor": "#0E0F13"
         }
       ],
-      "./plugins/withReleaseSigning"
+      "./plugins/withReleaseSigning",
+      [
+        "expo-localization",
+        {
+          "supportedLocales": ["en", "zh-Hans", "hi", "es", "ar", "fr", "bn", "pt", "ru", "id"]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
