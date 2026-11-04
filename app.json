@@ -2,7 +2,7 @@
   "expo": {
     "name": "Simple Video Editor",
     "slug": "simple-video-editor-app",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "simplevideoeditor",
@@ -13,6 +13,7 @@
     },
     "android": {
       "package": "com.mario.simplevideoeditor",
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#0E0F13",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -31,7 +32,8 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "Allow $(PRODUCT_NAME) to record voiceovers."
+          "microphonePermission": "Allow $(PRODUCT_NAME) to record voiceovers.",
+          "enableBackgroundPlayback": false
         }
       ],
       [
